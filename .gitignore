@@ -3,6 +3,5 @@ credentials.*
 *.pyc
 *.rdb
 dump.rdb
-plots/*.png
 *.png
 
