@@ -1,0 +1,8 @@
+credentials.*
+.DS_Store*
+*.pyc
+*.rdb
+dump.rdb
+plots/*.png
+*.png
+
