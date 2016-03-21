@@ -15,12 +15,8 @@ from requests.exceptions import HTTPError
 import time
 import urllib2
 
-pol = poloniex.poloniex(credentials.credentials.apikey,credentials.credentials.secret)
 
-# #in minutes
-# shortEMALength = 10*5 #20*60
-# longEMALength = 200*5 #80*60
-# priceinfo.removeIndexFromRedis(7150)
+
 
 
 
@@ -187,7 +183,12 @@ def buy(market,totalAmount): #totalAmount in ETH
 			print rBuy
 			if not (rBuy is None) and not ('error' in rBuy.keys()):
 				boughtAmount += remainingToBuy
-				print "\tbought %.8f at %.8f (%.8f remaining)" % (remainingToBuy,float(askPrice),(totalAmount - boughtAmount))
+				log = "bought %.8f at %.8f\t Total: %.8f" % (remainingToBuy,float(askPrice),(boughtAmount*float(askPrice)))
+				with open("trade-history.txt", "a") as myfile:
+					print log
+					myfile.write(log)
+				print "(%.8f remaining)" % (totalAmount - boughtAmount)
+				
 			else:
 				print "buy ended"
 				return False
@@ -197,7 +198,11 @@ def buy(market,totalAmount): #totalAmount in ETH
 			print rBuy
 			if not (rBuy is None) and not ('error' in rBuy.keys()):
 				boughtAmount += askAmount
-				print "\tbought %.8f at %.8f (%.8f remaining)" % (askAmount,float(askPrice),(totalAmount - boughtAmount))
+				log = "bought %.8f at %.8f\t Total: %.8f" % (remainingToBuy,float(askPrice),(boughtAmount*float(askPrice)))
+				with open("trade-history.txt", "a") as myfile:
+					print log
+					myfile.write(log)
+				print "(%.8f remaining)" % (totalAmount - boughtAmount)
 			else:
 				print "buy ended"
 				return False
@@ -216,7 +221,11 @@ def sell(market,totalAmount): #totalAmount in ETH
 			print rSell
 			if not (rSell is None) and not ('error' in rSell.keys()):
 				soldAmount += remainingToSell
-				print "\tsold %.8f at %.8f (%.8f remaining)" % (remainingToSell,float(bidPrice),(totalAmount - soldAmount))
+				log = "sold %.8f at %.8f\t Total: %.8f" % (remainingToSell,float(bidPrice),(remainingToSell*float(bidPrice)))
+				with open("trade-history.txt", "a") as myfile:
+					print log
+					myfile.write(log)
+				print "(%.8f remaining)" % (totalAmount - soldAmount)
 			else:
 				print 'Sell ended'
 				return False
@@ -225,7 +234,11 @@ def sell(market,totalAmount): #totalAmount in ETH
 			print rSell
 			if not (rSell is None) and not ('error' in rSell.keys()):
 				soldAmount += bidAmount
-				print "\tsold %.8f at %.8f (%.8f remaining)" % (bidAmount,float(bidPrice),(totalAmount - soldAmount))
+				log = "sold %.8f at %.8f\t Total: %.8f" % (remainingToSell,float(bidPrice),(remainingToSell*float(bidPrice)))
+				with open("trade-history.txt", "a") as myfile:
+					print log
+					myfile.write(log)
+				print "(%.8f remaining)" % (totalAmount - soldAmount)
 			else:
 				print 'Sell ended'
 				return False
@@ -333,7 +346,7 @@ def trade(market, shortEMALength, longEMALength, tradeFreeze):
 	prices = priceinfo.getLastValues(market,dataLength)
 	shortEMA = stats.ExpMovingAverage(prices,shortEMALength)
 	longEMA = stats.ExpMovingAverage(prices,longEMALength)
-	print 'shortEMA %s' % len(shortEMA)
+	print 'shortEMALength = %s\t longEMALength = %s' % (shortEMALength,longEMALength)
 	#returns True if buy, returns False if sell
 	def emaTrade(i):
 		return (shortEMA[i] > longEMA[i])
@@ -391,13 +404,32 @@ def tradeLoop(market, shortEMALength,longEMALength):
 		print ''
 
 
+apiKeysIndex = int(sys.argv[1])
+if sys.argv[2] == 'tunning' :
+	market = sys.argv[3]
+	if sys.argv[4] == 'auto':
+		getBestParams(market=market, shortFrom=50, shortTo=280, shortDelta=5, longTo=5000, longDelta=8)
+	else:
+		shortFrom = int(sys.argv[4])
+		shortTo = int(sys.argv[5])
+		shortDelta = int(sys.argv[6])
+		longTo = int(sys.argv[6])
+		longDelta = int(sys.argv[7])
+		getBestParams(market=market, shortFrom=shortFrom, shortTo=shortTo, shortDelta=shortDelta, longTo=longTo, longDelta=longDelta)
+	
+else:
+	market = sys.argv[2]
+	shortEMALength = int(sys.argv[3])
+	longEMALength = int(sys.argv[4])
+	# print sys.argv
+	pol = poloniex.poloniex(credentials.credentials.apikeys[apiKeysIndex],credentials.credentials.secrets[apiKeysIndex])
+	tradeLoop(market=market, shortEMALength=shortEMALength, longEMALength=longEMALength)
+
+# tradeLoop(market='BTC_IOC', shortEMALength=265, longEMALength=1781)
 
 # getBestParams('BTC_ETH')
-# getBestParams(market='BTC_MAID', shortFrom=50, shortTo=280, shortDelta=5, longTo=2000, longDelta=8)
+# getBestParams(market='BTC_IOC', shortFrom=50, shortTo=280, shortDelta=5, longTo=2000, longDelta=8)
 
-market = 'BTC_ETH'
-shortEMALength = 159
-longEMALength = 1156
-tradeLoop(market, shortEMALength, longEMALength)
+# tradeLoop(market='BTC_ETH', shortEMALength=159, longEMALength=1156)
 
 
